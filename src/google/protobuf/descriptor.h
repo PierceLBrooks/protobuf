@@ -330,6 +330,15 @@ class PROTOBUF_EXPORT InternalFeatureHelper {
   static const FeatureSet& GetFeatures(const DescriptorT& desc) {
     return desc.features();
   }
+  template <typename DescriptorT, typename TypeTraitsT, uint8_t field_type,
+            bool is_packed>
+  static typename TypeTraitsT::ConstType GetFeaturesExtension(
+      const DescriptorT& descriptor,
+      const google::protobuf::internal::ExtensionIdentifier<
+          FeatureSet, TypeTraitsT, field_type, is_packed>& extension) {
+    auto ext = descriptor.proto_features_->GetExtension(extension);
+    return descriptor.proto_features_->GetExtension(extension);
+  }
 
  private:
   friend class ::google::protobuf::compiler::CodeGenerator;

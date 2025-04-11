@@ -945,6 +945,24 @@ inline bool NestInFileClass(const Descriptor& descriptor) {
   return nest_in_file_class == pb::JavaFeatures::NestInFileClassFeature::YES;
 }
 
+template <typename Descriptor>
+inline bool MutableNestInFileClass(const Descriptor& descriptor) {
+  auto nest_in_file_class = JavaGenerator::GetResolvedSourceFeatures(descriptor)
+                                .GetExtension(pb::java)
+                                .mutable_nest_in_file_class();
+  ABSL_DCHECK(nest_in_file_class !=
+              pb::JavaFeatures::NestInFileClassMutableFeature::
+                  MUTABLE_NEST_IN_FILE_CLASS_UNKNOWN);
+  if (nest_in_file_class ==
+      pb::JavaFeatures::NestInFileClassMutableFeature::LEGACY) {
+    return !(
+        descriptor.file()->options().java_multiple_files() &&
+        descriptor.file()->options().has_java_multiple_files_mutable_package());
+  }
+  return nest_in_file_class ==
+         pb::JavaFeatures::NestInFileClassMutableFeature::YES;
+}
+
 // Returns whether the type should be nested in the file class for the given
 // descriptor, depending on different Protobuf Java API versions.
 // TODO: b/372482046 - Implement `nest_in_file_class` feature for mutable API.
@@ -962,8 +980,14 @@ absl::Status ValidateNestInFileClassFeatureHelper(
         JavaGenerator::GetUnresolvedSourceFeatures(descriptor, pb::java);
     if (unresolved_features.has_nest_in_file_class()) {
       return absl::FailedPreconditionError(absl::StrCat(
-          "Feature next_in_file_class only applies to top-level types and is "
-          "not allowed to be set on the nexted type: ",
+          "Feature nest_in_file_class only applies to top-level types and is "
+          "not allowed to be set on the nested type: ",
+          descriptor.full_name()));
+    }
+    if (unresolved_features.has_mutable_nest_in_file_class()) {
+      return absl::FailedPreconditionError(absl::StrCat(
+          "Feature mutable_nest_in_file_class only applies to top-level types "
+          "and is not allowed to be set on the nested type: ",
           descriptor.full_name()));
     }
   }
